@@ -1,0 +1,54 @@
+"""Authentication dependencies for protected API endpoints."""
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.modules.auth import utils
+from app.modules.auth import service
+from app.modules.auth.models import User
+from app.modules.auth.exceptions import InvalidToken, TokenExpired
+
+# Defines the security scheme to be used in the API docs and for token extraction.
+http_bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer_scheme),
+    db: Session = Depends(get_db)
+) -> User:
+    """
+    Dependency to get the current user from a JWT access token.
+
+    Verifies the token and fetches the corresponding user from the database.
+    Raises HTTPException 401 for any authentication failure.
+    """
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    token = credentials.credentials
+    try:
+        payload = utils.verify_token(token, expected_type="access")
+        user_id = int(payload.get("sub"))
+        if user_id is None:
+            raise credentials_exception
+            
+    except (InvalidToken, TokenExpired, ValueError, TypeError):
+        raise credentials_exception
+
+    user = service.get_user_by_id(db=db, user_id=user_id)
+    if user is None:
+        raise credentials_exception
+
+    return user
