@@ -3,7 +3,7 @@
 import hashlib
 import uuid
 import bcrypt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt, ExpiredSignatureError
 
@@ -30,13 +30,13 @@ def hash_jti(jti: str) -> str:
 
 def create_access_token(user_id: int, email: str) -> str:
     """Create a new access token."""
-    expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {
         "sub": str(user_id),
         "email": email,
         "type": "access",
         "exp": expire,
-        "iat": datetime.utcnow()
+        "iat": datetime.now(timezone.utc)
     }
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
@@ -44,13 +44,13 @@ def create_access_token(user_id: int, email: str) -> str:
 def create_refresh_token(user_id: int) -> tuple[str, str]:
     """Create a new refresh token and return (token, jti)."""
     jti = str(uuid.uuid4())
-    expire = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
+    expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days)
     payload = {
         "sub": str(user_id),
         "type": "refresh",
         "jti": jti,
         "exp": expire,
-        "iat": datetime.utcnow()
+        "iat": datetime.now(timezone.utc)
     }
     token = jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
     return token, jti
