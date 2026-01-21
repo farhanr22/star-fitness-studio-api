@@ -1,0 +1,10 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount DB file to persist data
+      - ./fitness_studio.db:/app/fitness_studio.db
+    env_file:
+      - ./.env
