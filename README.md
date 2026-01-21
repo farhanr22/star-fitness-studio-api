@@ -241,3 +241,8 @@ curl -X GET "http://localhost:8000/bookings" \
 ```
 
 </details>
+
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
