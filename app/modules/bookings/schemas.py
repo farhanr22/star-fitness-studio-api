@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from pydantic import BaseModel, EmailStr, Field, field_serializer
+from pydantic import BaseModel, EmailStr, Field, field_serializer, ConfigDict
 
 from app.core.utils import serialize_datetime_to_utc_z_format
 
@@ -27,8 +27,7 @@ class BookingResponse(BaseModel):
     def serialize_created_at(self, dt: datetime, _info) -> str:
         return serialize_datetime_to_utc_z_format(dt)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserBookingResponse(BaseModel):
@@ -52,6 +51,4 @@ class UserBookingResponse(BaseModel):
     def serialize_time_string(self, dt: datetime, _info) -> str:
         return serialize_datetime_to_utc_z_format(dt)
 
-    class Config:
-        from_attributes = True
-        populate_by_name = True
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)

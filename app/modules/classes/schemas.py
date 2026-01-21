@@ -3,7 +3,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, field_validator, field_serializer, Field
+from pydantic import BaseModel, field_validator, field_serializer, Field, ConfigDict
 from app.core.utils import serialize_datetime_to_utc_z_format
 
 
@@ -15,10 +15,7 @@ class ClassBase(BaseModel):
     # Map this field to 'availableSlots' key in API requests/responses
     available_slots: int = Field(..., gt=0, alias="availableSlots")
 
-    class Config:
-        # Use field alias for serialization in both ways
-        populate_by_name = True
-        from_attributes = True
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True)
 
 
 class ClassCreate(ClassBase):
