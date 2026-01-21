@@ -15,7 +15,7 @@ class FitnessClass(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     instructor = Column(String, nullable=False)
-    dateTime = Column(DateTime(timezone=True), nullable=False)
+    dateTime = Column(DateTime(timezone=True), nullable=False, index=True)
     
     # Total capacity of the class, set at creation
     capacity = Column(Integer, nullable=False)

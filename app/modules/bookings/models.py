@@ -15,11 +15,11 @@ class Booking(Base):
     id = Column(Integer, primary_key=True, index=True)
     
     # The authenticated user who made the booking
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     user = relationship("User")
 
     # The class that was booked
-    class_id = Column(Integer, ForeignKey("classes.id"), nullable=False)
+    class_id = Column(Integer, ForeignKey("classes.id"), nullable=False, index=True)
     fitness_class = relationship("FitnessClass")
     
     # Client details provided at the time of booking
