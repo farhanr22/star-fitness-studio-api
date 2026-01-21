@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from app.db.session import Base, engine
 from app.modules.auth import auth_router
 from app.modules.classes import classes_router
+from app.modules.bookings   import bookings_router
 
 # Create database tables
 # The models get implicitly discovered by SQLAlchemy
@@ -19,6 +20,7 @@ app = FastAPI(
 # Include routers
 app.include_router(auth_router, tags=["Authentication"])
 app.include_router(classes_router, tags=["Classes"])
+app.include_router(bookings_router, tags=["Bookings"])
 
 
 @app.get("/health")
