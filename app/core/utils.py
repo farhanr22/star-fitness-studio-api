@@ -23,3 +23,14 @@ def ensure_ist_aware(dt: datetime) -> datetime:
     else:
         # Already aware, convert to IST
         return dt.astimezone(ist_tz)
+
+def serialize_datetime_to_utc_z_format(dt: datetime) -> str:
+    """
+    Serializes a timezone-aware datetime object to a UTC string 
+    with a 'Z' suffix.
+    """
+
+    ist_aware_dt = ensure_ist_aware(dt)
+    
+    utc_time = ist_aware_dt.astimezone(ZoneInfo("UTC"))
+    return utc_time.strftime('%Y-%m-%dT%H:%M:%SZ')

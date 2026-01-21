@@ -4,6 +4,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, field_validator, field_serializer, Field
+from app.core.utils import serialize_datetime_to_utc_z_format
 
 
 class ClassBase(BaseModel):
@@ -39,7 +40,5 @@ class ClassResponse(ClassBase):
     dateTime: datetime
 
     @field_serializer('dateTime')
-    def serialize_datetime(self, dt: datetime, _info) -> str:
-        """Serialize the IST datetime to a UTC datetime string with 'Z'."""
-        utc_time = dt.astimezone(ZoneInfo("UTC"))
-        return utc_time.strftime('%Y-%m-%dT%H:%M:%SZ')
+    def serialize_dt(self, dt: datetime, _info) -> str:
+        return serialize_datetime_to_utc_z_format(dt)

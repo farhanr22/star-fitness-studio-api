@@ -4,6 +4,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from pydantic import BaseModel, EmailStr, Field, field_serializer
 
+from app.core.utils import serialize_datetime_to_utc_z_format
+
 
 class BookingCreate(BaseModel):
     """Schema for creating a new booking."""
@@ -23,9 +25,7 @@ class BookingResponse(BaseModel):
 
     @field_serializer('created_at')
     def serialize_created_at(self, dt: datetime, _info) -> str:
-        """Serialize the IST datetime to a UTC string with 'Z'."""
-        utc_time = dt.astimezone(ZoneInfo("UTC"))
-        return utc_time.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return serialize_datetime_to_utc_z_format(dt)
 
     class Config:
         from_attributes = True
@@ -49,10 +49,8 @@ class UserBookingResponse(BaseModel):
     booked_as_email: EmailStr = Field(..., alias="bookedAsEmail")
 
     @field_serializer('date_time', 'booked_at')
-    def serialize_datetime_to_utc(self, dt: datetime, _info) -> str:
-        """Serialize the IST datetime to a UTC string with 'Z'."""
-        utc_time = dt.astimezone(ZoneInfo("UTC"))
-        return utc_time.strftime('%Y-%m-%dT%H:%M:%SZ')
+    def serialize_time_string(self, dt: datetime, _info) -> str:
+        return serialize_datetime_to_utc_z_format(dt)
 
     class Config:
         from_attributes = True
