@@ -3,7 +3,7 @@
 from typing import List
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -29,11 +29,8 @@ def book_class(
 ):
     """Book a slot in a class. Requires authentication."""
     logger.info(f"Request to book class ID {booking_in.class_id} received from user '{current_user.email}'")
-    try:
-        booking = service.create_booking(db, current_user, booking_in)
-        return booking
-    except AppException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.message)
+    booking = service.create_booking(db, current_user, booking_in)
+    return booking
 
 
 @router.get("/bookings", response_model=List[UserBookingResponse])

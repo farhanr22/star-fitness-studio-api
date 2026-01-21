@@ -4,6 +4,14 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+
+from app.core.exceptions import (
+    AppException,
+    http_exception_handler,
+    validation_exception_handler,
+    unhandled_exception_middleware,
+)
 
 from app.db.session import Base, engine
 from app.modules.auth import auth_router
@@ -21,6 +29,7 @@ logger = logging.getLogger(__name__)
 # The models get implicitly discovered by SQLAlchemy
 Base.metadata.create_all(bind=engine)
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Application startup...")
@@ -34,6 +43,11 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Exception handler and middleware
+app.middleware("http")(unhandled_exception_middleware)
+app.add_exception_handler(AppException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 # Include routers
 app.include_router(auth_router, tags=["Authentication"])

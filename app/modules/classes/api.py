@@ -3,7 +3,7 @@
 from typing import List
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -24,19 +24,13 @@ def create_new_class(
     current_user: User = Depends(get_current_user),
 ):
     """Create a new fitness class. Requires authentication."""
-    try:
-        logger.info(
-            f"Request to create new class received from user '{current_user.email}'"
-        )
-        new_class = service.create_class(
-            db=db, class_data=class_in, creator_id=current_user.id
-        )
-        return new_class
-    except AppException as e:
-        logger.error(
-            f"Error creating class for user '{current_user.email}': {e.message}"
-        )
-        raise HTTPException(status_code=e.status_code, detail=e.message)
+    logger.info(
+        f"Request to create new class received from user '{current_user.email}'"
+    )
+    new_class = service.create_class(
+        db=db, class_data=class_in, creator_id=current_user.id
+    )
+    return new_class
 
 
 @router.get("/classes", response_model=List[ClassResponse])

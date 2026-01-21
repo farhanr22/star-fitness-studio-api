@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -10,7 +10,7 @@ from app.db.session import get_db
 from app.modules.auth import utils
 from app.modules.auth import service
 from app.modules.auth.models import User
-from app.modules.auth.exceptions import InvalidToken, TokenExpired
+from app.modules.auth.exceptions import InvalidToken, TokenExpired, AuthenticationError
 
 logger = logging.getLogger(__name__)
 
@@ -26,20 +26,11 @@ def get_current_user(
     Dependency to get the current user from a JWT access token.
 
     Verifies the token and fetches the corresponding user from the database.
-    Raises HTTPException 401 for any authentication failure.
+    Raises a specific AuthenticationError for any authentication failure.
     """
     if credentials is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-        
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+        logger.warning("Authentication failed: No credentials provided.")
+        raise AuthenticationError(message="Not authenticated")
 
     token = credentials.credentials
     try:
@@ -47,18 +38,19 @@ def get_current_user(
         user_id = int(payload.get("sub"))
         if user_id is None:
             logger.warning("Token validation failed: user_id (sub) is missing.")
-            raise credentials_exception
+            raise AuthenticationError(message="Invalid token: sub claim missing")
             
     except TokenExpired:
         logger.warning("Token validation failed: token has expired.")
-        raise credentials_exception
+        raise AuthenticationError(message="Token has expired")
+        
     except (InvalidToken, ValueError, TypeError):
         logger.warning("Token validation failed: token is invalid or malformed.")
-        raise credentials_exception
+        raise AuthenticationError(message="Invalid token")
 
     user = service.get_user_by_id(db=db, user_id=user_id)
     if user is None:
         logger.warning(f"Token validation failed: user_id {user_id} not found in DB.")
-        raise credentials_exception
+        raise AuthenticationError(message="Invalid token")
 
     return user

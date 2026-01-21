@@ -29,3 +29,10 @@ class InvalidToken(AppException):
     
     def __init__(self):
         super().__init__("Invalid token", status_code=401)
+
+
+class AuthenticationError(AppException):
+    """Raised when authentication fails on a protected endpoint."""
+    
+    def __init__(self, message: str = "Could not validate credentials"):
+        super().__init__(message, status_code=401)
