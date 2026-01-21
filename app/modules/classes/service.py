@@ -1,6 +1,7 @@
 """Service layer for class-related business logic."""
 
 from typing import List
+import logging
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -12,9 +13,12 @@ from app.modules.classes.exceptions import (
     InstructorBookingConflictError,
 )
 
+logger = logging.getLogger(__name__)
 
 def create_class(db: Session, class_data: ClassCreate, creator_id: int) -> FitnessClass:
     """Creates a new fitness class."""
+    logger.info(f"Creating class '{class_data.name}' for creator ID {creator_id}")
+
     if class_data.dateTime < now_in_ist():
         raise InvalidClassTimeError()
 
@@ -33,9 +37,15 @@ def create_class(db: Session, class_data: ClassCreate, creator_id: int) -> Fitne
         db.commit()
     except IntegrityError:
         db.rollback()
+        logger.warning(
+            f"Instructor booking conflict for instructor '{class_data.instructor}' at '{class_data.dateTime}'"
+        )
         raise InstructorBookingConflictError()
 
     db.refresh(new_class)
+    logger.info(
+        f"Successfully created class '{new_class.name}' with ID {new_class.id}"
+    )
     return new_class
 
 

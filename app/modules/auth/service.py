@@ -1,17 +1,20 @@
 """Authentication service with user management business logic."""
 
+import logging
 from sqlalchemy.orm import Session
 
 from app.modules.auth import utils
 from app.modules.auth.models import User
 from app.modules.auth.exceptions import InvalidCredentials, UserAlreadyExists, InvalidToken
 
+logger = logging.getLogger(__name__)
 
 def create_user(db: Session, name: str, email: str, password: str) -> User:
     """Create a new user."""
     # Check if user already exists
     existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
+        logger.warning(f"Attempted to create a user with an existing email: {email}")
         raise UserAlreadyExists()
     
     # Create new user
@@ -23,6 +26,7 @@ def create_user(db: Session, name: str, email: str, password: str) -> User:
     db.add(user)
     db.commit()
     db.refresh(user)
+    logger.info(f"Successfully created user with ID {user.id} and email {user.email}")
     return user
 
 
@@ -31,6 +35,7 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
     user = db.query(User).filter(User.email == email).first()
     
     if not user or not utils.verify_password(password, user.password_hash):
+        logger.warning(f"Invalid login attempt for email: {email}")
         raise InvalidCredentials()
     
     return user
@@ -49,7 +54,9 @@ def update_refresh_token(db: Session, user: User, jti: str) -> None:
 
 def verify_refresh_token(db: Session, token: str) -> User:
     """Verify refresh token and return associated user."""
+    
     payload = utils.verify_token(token, "refresh")
+    logger.info(f"Verifying refresh token for user ID: {payload.get('sub')}")
     
     user_id = int(payload["sub"])
     jti = payload["jti"]

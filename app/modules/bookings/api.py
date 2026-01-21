@@ -1,6 +1,7 @@
 """API endpoints for managing class bookings."""
 
 from typing import List
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -15,6 +16,7 @@ from app.modules.bookings.schemas import (
 )
 from app.core.exceptions import AppException
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -26,6 +28,7 @@ def book_class(
     current_user: User = Depends(get_current_user)
 ):
     """Book a slot in a class. Requires authentication."""
+    logger.info(f"Request to book class ID {booking_in.class_id} received from user '{current_user.email}'")
     try:
         booking = service.create_booking(db, current_user, booking_in)
         return booking
@@ -39,6 +42,7 @@ def get_my_bookings(
     current_user: User = Depends(get_current_user)
 ):
     """View all bookings made by the authenticated user."""
+    logger.info(f"Request to fetch bookings received from user '{current_user.email}'")
     results = service.get_user_bookings(db, current_user.id)
     
     # Map the tuple fields to the response schema

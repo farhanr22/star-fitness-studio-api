@@ -1,5 +1,7 @@
 """Authentication dependencies for protected API endpoints."""
 
+import logging
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -9,6 +11,8 @@ from app.modules.auth import utils
 from app.modules.auth import service
 from app.modules.auth.models import User
 from app.modules.auth.exceptions import InvalidToken, TokenExpired
+
+logger = logging.getLogger(__name__)
 
 # Defines the security scheme to be used in the API docs and for token extraction.
 http_bearer_scheme = HTTPBearer(auto_error=False)
@@ -42,13 +46,19 @@ def get_current_user(
         payload = utils.verify_token(token, expected_type="access")
         user_id = int(payload.get("sub"))
         if user_id is None:
+            logger.warning("Token validation failed: user_id (sub) is missing.")
             raise credentials_exception
             
-    except (InvalidToken, TokenExpired, ValueError, TypeError):
+    except TokenExpired:
+        logger.warning("Token validation failed: token has expired.")
+        raise credentials_exception
+    except (InvalidToken, ValueError, TypeError):
+        logger.warning("Token validation failed: token is invalid or malformed.")
         raise credentials_exception
 
     user = service.get_user_by_id(db=db, user_id=user_id)
     if user is None:
+        logger.warning(f"Token validation failed: user_id {user_id} not found in DB.")
         raise credentials_exception
 
     return user

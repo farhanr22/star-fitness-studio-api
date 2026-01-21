@@ -2,6 +2,7 @@
 
 from typing import List
 from zoneinfo import ZoneInfo
+import logging
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -18,9 +19,12 @@ from app.modules.bookings.exceptions import (
     ClassInPastError,
 )
 
+logger = logging.getLogger(__name__)    
+
 
 def create_booking(db: Session, user: User, booking_data: BookingCreate) -> Booking:
     """Creates a booking for a user for a specific class."""
+    logger.info(f"User ID {user.id} attempting to book class ID {booking_data.class_id}")
 
     # Validate the class
     fitness_class = get_class(db, booking_data.class_id)
@@ -65,13 +69,16 @@ def create_booking(db: Session, user: User, booking_data: BookingCreate) -> Book
             db.add(new_booking)
             db.flush()  # Flush to generate booking ID and check constraints
             db.refresh(new_booking) # Reload the booking object
+            logger.info(f"Successfully created booking ID {new_booking.id} for user ID {user.id} on class ID {fitness_class.id}")
 
         db.commit()
         return new_booking
 
     except IntegrityError:
         db.rollback()
-        # Class was already booked
+        logger.warning(
+            f"Duplicate booking prevented for user ID {user.id} and class ID {booking_data.class_id}"
+        )
         raise AlreadyBookedError()
     except Exception:
         db.rollback()
@@ -83,6 +90,7 @@ def get_user_bookings(db: Session, user_id: int) -> List[tuple[Booking, FitnessC
     Retrieves a list of all classes booked by a user.
     Returns a list of tuples containing (Booking, FitnessClass) for easy serialization.
     """
+    logger.info(f"Fetching all bookings for user ID {user_id}")
     return (
         db.query(Booking, FitnessClass)
         .join(FitnessClass, Booking.class_id == FitnessClass.id)
