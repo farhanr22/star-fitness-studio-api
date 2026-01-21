@@ -38,6 +38,8 @@ class ClassResponse(ClassBase):
     """Schema for returning class data."""
     id: int
     dateTime: datetime
+    # Override and allow slots to be 0, since it is valid for existing classes
+    available_slots: int = Field(..., alias="availableSlots")
 
     @field_serializer('dateTime')
     def serialize_dt(self, dt: datetime, _info) -> str:
