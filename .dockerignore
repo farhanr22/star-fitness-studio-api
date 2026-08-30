@@ -1,0 +1,19 @@
+# Local virtual environments
+venv/
+.venv/
+
+# Git
+.git/
+.gitignore
+
+# Secrets — never ship into an image
+.env
+
+# Database — mounted as a volume via docker-compose; DB is created at runtime
+*.db
+*.sqlite3
+
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/

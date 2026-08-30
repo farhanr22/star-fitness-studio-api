@@ -1,37 +1,21 @@
-# Builder stage ---
-
-FROM python:3.11-slim AS builder
+FROM python:3.12-slim
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-# Create and activate venv
-ENV VIRTUAL_ENV=/opt/venv
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV UV_PROJECT_ENVIRONMENT="/opt/venv" \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PATH="/opt/venv/bin:$PATH"
 
 # Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --no-dev
 
-# Copy application code
+# Copy application code and install project
 COPY . .
-
-
-# Final stage ---
-
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Copy venv from builder stage
-COPY --from=builder /opt/venv /opt/venv
-
-# Copy application code from builder stage
-COPY --from=builder /app .
-
-# Set the PATH to include the venv
-ENV PATH="/opt/venv/bin:$PATH"
+RUN uv sync --frozen --no-dev
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

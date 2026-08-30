@@ -80,7 +80,7 @@ The project is built with a focus on robustness, including a modular architectur
 <details>
 <summary><strong>Option 1: Using Docker (Recommended)</strong></summary>
 
-**Prerequisites:** Docker and Docker Compose installed.
+**Prerequisites:** Docker and Docker Compose installed. The image uses `uv` to manage Python dependencies, so you do not need `uv` installed locally for this option.
 
 **1. Clone the repository:**
 ```bash
@@ -115,7 +115,10 @@ docker compose exec api pytest
 <details>
 <summary><strong>Option 2: Using a Local Virtual Environment</strong></summary>
 
-**Prerequisites:** Python 3.11+ and `venv` installed.
+**Prerequisites:** Python 3.12+ and `uv` installed.
+
+**0. Install `uv`:**
+If you don't have it yet, install it with: `curl -LsSf https://astral.sh/uv/install.sh | sh` (see the [uv installation docs](https://docs.astral.sh/uv/getting-started/installation/) for alternatives).
 
 **1. Clone the repository and navigate into it:**
 ```bash
@@ -123,37 +126,32 @@ git clone https://github.com/farhanr22/star-fitness-studio-api.git
 cd star-fitness-studio-api
 ```
 
-**2. Create and activate a virtual environment:**
+**2. Set up the environment and install dependencies:**
+`uv sync` creates a virtual environment and installs all pinned dependencies from `uv.lock`.
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+uv sync
 ```
 
-**3. Install dependencies:**
-```bash
-pip install -r requirements.txt
-```
-
-**4. Create the environment file:**
+**3. Create the environment file:**
 ```bash
 cp .env.example .env
 ```
 
-**5. Run the Server:**
+**4. Run the Server:**
 ```bash
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 The API will be available at `http://localhost:8000`.
 
-**6. Seed the Database (Optional):**
-In a new terminal (with the venv activated), run:
+**5. Seed the Database (Optional):**
+In a new terminal, run:
 ```bash
-python seed.py
+uv run python seed.py
 ```
 
-**7. Run Tests (Optional):**
+**6. Run Tests (Optional):**
 ```bash
-pytest
+uv run pytest
 ```
 </details>
 
